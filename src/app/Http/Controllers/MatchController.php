@@ -16,7 +16,7 @@ class MatchController extends Controller
     }
 
     public function store(Request $request)
-{
+    {
     // フォームデータを受け取り、マッチモデルを使用してデータベースに保存する
     $match = new Match();
     $match->date = $request->date;
@@ -38,16 +38,34 @@ class MatchController extends Controller
 
     // マッチのリストページにリダイレクトする
     return redirect()->route('matches.index')->with('success', '試合を記録しました');
-}
+    }
 
     public function search(Request $request)
     {
-        $date = $request->input('date');
-        $opponent = $request->input('opponent');
+    // 日付と対戦相手をリクエストから取得
+    $date = $request->input('date');
+    $opponent = $request->input('opponent');
 
-        // 検索条件に基づいて試合結果を取得する処理を行う
+    // 日付と対戦相手が入力されている場合は、該当する試合のみを取得する
+    if ($date && $opponent) {
+        $matches = Match::where('date', $date)->where('opponent', $opponent)->get();
+    } elseif ($date) {
+        $matches = Match::where('date', $date)->get();
+    } elseif ($opponent) {
+        $matches = Match::where('opponent', $opponent)->get();
+    } else {
+        // 日付と対戦相手がどちらも入力されていない場合は全試合を取得する
+        $matches = Match::all();
+    }
 
-        return redirect()->route('matches.index')->with('date', $date)->with('opponent', $opponent);
+    // 検索結果をビューに渡す
+    return view('matches.index', compact('matches'));
+    }
+
+    public function showForm()
+    {
+        // フォームを表示するビューを返す
+        return view('matches.index');
     }
 
 }

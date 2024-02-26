@@ -8,6 +8,7 @@
   <title>Soccer</title>
   <link rel="stylesheet" href="{{ asset('css/sanitize.css') }}">
   <link rel="stylesheet" href="{{ asset('css/common.css') }}">
+  <link href="{{ asset('css/mypage.css') }}" rel="stylesheet">
   @yield('css')
 </head>
 
@@ -22,7 +23,7 @@
           <ul class="header-nav">
             @if (Auth::check())
             <li class="header-nav__item">
-              <a class="header-nav__link" href="/mypage">マイページ</a>
+              <a class="header-nav__link" href="/">マイページ</a>
             </li>
             <li class="header-nav__item">
               <form class="form" action="/logout" method="post">

@@ -7,19 +7,21 @@
             <div class="card mt-4">
                 <div class="card-header">過去の試合結果</div>
                 <div class="card-body">
-                    <form action="{{ route('matches.index') }}" method="GET">
+                    <!-- 検索フォーム -->
+                    <form action="{{ route('matches.search') }}" method="GET">
                         <div class="form-group row">
                             <label for="date" class="col-md-2 col-form-label text-md-right">日付:</label>
                             <div class="col-md-4">
-                                <input type="date" class="form-control" id="date" name="date">
+                                <input type="date" class="form-control" id="date" name="date" value="{{ request('date') }}">
                             </div>
                             <label for="opponent" class="col-md-2 col-form-label text-md-right">対戦相手:</label>
                             <div class="col-md-4">
-                                <input type="text" class="form-control" id="opponent" name="opponent">
+                                <input type="text" class="form-control" id="opponent" name="opponent" value="{{ request('opponent') }}">
                             </div>
                         </div>
                         <button type="submit" class="btn btn-primary">検索</button>
                     </form>
+                    <!-- 検索フォームここまで -->
                     <hr>
                     @if ($matches->isEmpty())
                         <p>過去の試合結果はありません。</p>
