@@ -68,4 +68,15 @@ class MatchController extends Controller
         return view('matches.index');
     }
 
+    public function secondView()
+    {
+        // ここでビューを表示する処理を記述
+        return view('second'); // ビューの名前は 'second.blade.php' と仮定します
+    }
+
+    public function thirdView()
+    {
+        // ここでビューを表示する処理を記述
+        return view('third');
+    }
 }

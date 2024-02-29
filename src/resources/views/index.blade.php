@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>サッカーグラウンド</title>
+<title>3-3-1 Formation 3-3-1</title>
 <style>
   body, html {
     margin: 0;
@@ -284,7 +284,6 @@ if (document.getElementById("playerNumber") && document.getElementById("playerFo
 
   // フォームを選手番号の右隣に配置
   playerForm.style.display = "block";
-  playerForm.style.position = "fixed";
   playerForm.style.top = rect.top + "px";
   playerForm.style.left = (rect.right + 10) + "px";
 }
@@ -359,7 +358,33 @@ function updateTeamFormation(teamId) {
     teamContainer.appendChild(row2);
     teamContainer.appendChild(row3);
   } else if (selectedFormation === '3-2-2') {
-    // 3-2-2の配置に変更
+    var players = ['Player 1', 'Player 2', 'Player 3', 'Player 4', 'Player 5', 'Player 6', 'Player 7'];
+    var row1 = document.createElement('div');
+    row1.classList.add('row');
+    var row2 = document.createElement('div');
+    row2.classList.add('row');
+    var row3 = document.createElement('div');
+    row3.classList.add('row');
+
+    for (var i = 0; i < 3; i++) {
+        var playerDiv = createPlayerDiv(players[i]);
+        row1.appendChild(playerDiv);
+    }
+
+    for (var i = 3; i < 5; i++) {
+        var playerDiv = createPlayerDiv(players[i]);
+        row2.appendChild(playerDiv);
+    }
+
+    for (var i = 5; i < 7; i++) {
+        var playerDiv = createPlayerDiv(players[i]);
+        row3.appendChild(playerDiv);
+    }
+
+    teamContainer.appendChild(row1);
+    teamContainer.appendChild(row2);
+    teamContainer.appendChild(row3);
+
   } else if (selectedFormation === '2-4-1') {
     // 2-4-1の配置に変更
   } else if (selectedFormation === '2-3-2') {

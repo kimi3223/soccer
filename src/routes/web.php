@@ -27,3 +27,5 @@ Route::post('/matches', [MatchController::class, 'store'])->name('matches.store'
 
 // 新しい試合を保存するルート
 Route::post('/matches', [MatchController::class, 'store'])->name('matches.store');
+Route::get('/second', [MatchController::class, 'secondView']);
+Route::get('/third', [MatchController::class, 'thirdView']);
