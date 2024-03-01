@@ -30,6 +30,11 @@
     align-items: center;
     margin-bottom: 50px;
     cursor: pointer;
+    font-size: 24px;
+  }
+
+  .player span {
+  display: inline-block;
   }
 
   /* チーム1の選手を配置するスタイル */
@@ -83,7 +88,7 @@
   /* 選択ボックスのスタイル */
   #teamSelectLeft {
     position: absolute;
-    top: 10px; /* 上側からの距離 */
+    top: 50px; /* 上側からの距離 */
     left: 10px; /* 左側からの距離 */
     padding: 5px;
     border: 1px solid #ccc;
@@ -93,7 +98,7 @@
 
   #teamSelectRight {
     position: absolute;
-    top: 10px; /* 上側からの距離 */
+    top: 50px; /* 上側からの距離 */
     right: 10px; /* 右側からの距離 */
     padding: 5px;
     border: 1px solid #ccc;
@@ -169,38 +174,41 @@
   <!-- チーム1の選手を配置する -->
   <div id="team1" class="team-container">
     <div class="row">
-      <div class="player" onclick="showPlayerInfo('Player 1')"><span class="player-number">1</span></div>
-      <div class="player" onclick="showPlayerInfo('Player 2')"><span class="player-number">2</span></div>
+      <div class="player" onclick="showPlayerInfo('Player 1')"></div>
+      <div class="player" onclick="showPlayerInfo('Player 2')"></div>
     </div>
     <div class="row">
-      <div class="player" onclick="showPlayerInfo('Player 3')"><span class="player-number">3</span></div>
-      <div class="player" onclick="showPlayerInfo('Player 4')"><span class="player-number">4</span></div>
-      <div class="player" onclick="showPlayerInfo('Player 5')"><span class="player-number">5</span></div>
-      <div class="player" onclick="showPlayerInfo('Player 6')"><span class="player-number">6</span></div>
+      <div class="player" onclick="showPlayerInfo('Player 3')"></div>
+      <div class="player" onclick="showPlayerInfo('Player 4')"></div>
+      <div class="player" onclick="showPlayerInfo('Player 5')"></div>
+      <div class="player" onclick="showPlayerInfo('Player 6')"></div>
     </div>
     <div class="row">
-      <div class="player" onclick="showPlayerInfo('Player 7')"><span class="player-number">7</span></div>
+      <div class="player" onclick="showPlayerInfo('Player 7')"></div>
     </div>
   </div>
 
   <!-- チーム2の選手を配置する（未実装） -->
   <div id="team2" class="team-container">
-    <div class="player7" onclick="showPlayerInfo('Player 2-7')"><span class="player-number">7</span></div>
+    <div class="player7" onclick="showPlayerInfo('Player 2-7')"></div>
     <div class="row">
-      <div class="player" onclick="showPlayerInfo('Player 2-6')"><span class="player-number">6</span></div>
-      <div class="player" onclick="showPlayerInfo('Player 2-5')"><span class="player-number">5</span></div>
-      <div class="player" onclick="showPlayerInfo('Player 2-4')"><span class="player-number">4</span></div>
+      <div class="player" onclick="showPlayerInfo('Player 2-6')"></div>
+      <div class="player" onclick="showPlayerInfo('Player 2-5')"></div>
+      <div class="player" onclick="showPlayerInfo('Player 2-4')"></div>
     </div>
     <div class="row">
-      <div class="player" onclick="showPlayerInfo('Player 2-3')"><span class="player-number">3</span></div>
-      <div class="player" onclick="showPlayerInfo('Player 2-2')"><span class="player-number">2</span></div>
-      <div class="player" onclick="showPlayerInfo('Player 2-1')"><span class="player-number">1</span></div>
+      <div class="player" onclick="showPlayerInfo('Player 2-3')"></div>
+      <div class="player" onclick="showPlayerInfo('Player 2-2')"></div>
+      <div class="player" onclick="showPlayerInfo('Player 2-1')"></div>
     </div>
   </div>
 </div>
 
 <!-- チーム1の選択ボックス -->
-<select id="teamSelectLeft" onchange="updateTeamFormation('team1')">
+<div id="teamNameLeft" style="position: absolute; top: 10px; left: 10px; padding: 5px; border: 1px solid #ccc; border-radius: 5px; background-color: #fff;">
+  バサラ兵庫
+</div>
+<select id="teamSelectLeft" style="position: absolute; top: 50px; left: 10px; padding: 5px; border: 1px solid #ccc; border-radius: 5px; background-color: #fff;" onchange="updateTeamFormation('team1')">
   <option value="3-3-1">2-4-1</option>
   <option value="3-3-1">3-2-2</option>
   <option value="3-3-1">3-3-1</option>
@@ -209,7 +217,22 @@
 </select>
 
 <!-- チーム2の選択ボックス -->
-<select id="teamSelectRight" onchange="updateTeamFormation('team2')">
+<div id="teamNameRight" style="position: absolute; top: 10px; right: 10px; padding: 5px; border: 1px solid #ccc; border-radius: 5px; background-color: #fff;">
+  <select style="border: none;" onchange="updateTeamName('teamNameRight', 'team2')">
+    <option value="Team 1">アミティエ</option>
+    <option value="Team 2">ALBA</option>
+    <option value="Team 3">ZERO(大阪)</option>
+    <option value="Team 4">フォルテ新宮</option>
+    <option value="Team 5">オシャラ</option>
+    <option value="Team 6">ヨーケン</option>
+    <option value="Team 7">神戸FC</option>
+    <option value="Team 8">Fenomeno</option>
+    <option value="Team 9">DREAM</option>
+    <option value="Team 10">ヴィッセル神戸</option>
+    <!-- 他のチーム名も選択肢として追加 -->
+  </select>
+</div>
+<select id="teamSelectRight" style="position: absolute; top: 50px; right: 10px; padding: 5px; border: 1px solid #ccc; border-radius: 5px; background-color: #fff;" onchange="updateTeamFormation('team2')">
   <option value="3-3-1">3-3-1</option>
   <option value="3-3-1">3-2-2</option>
   <option value="3-3-1">2-4-1</option>

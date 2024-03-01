@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\MatchController;
+use App\Http\Controllers\PlayerController;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,3 +30,5 @@ Route::post('/matches', [MatchController::class, 'store'])->name('matches.store'
 Route::post('/matches', [MatchController::class, 'store'])->name('matches.store');
 Route::get('/second', [MatchController::class, 'secondView']);
 Route::get('/third', [MatchController::class, 'thirdView']);
+
+Route::post('/players', [PlayerController::class, 'store']);
