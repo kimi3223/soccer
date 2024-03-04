@@ -17,27 +17,13 @@ class MatchController extends Controller
 
     public function store(Request $request)
     {
-    // フォームデータを受け取り、マッチモデルを使用してデータベースに保存する
     $match = new Match();
-    $match->date = $request->date;
-    $match->opponent = $request->opponent;
-
-     // フォームから送信された試合結果とポジションのデータを処理し、$matchに設定する
-    $match->result1 = $request->results[0]; // 最初の試合の結果
-    $match->position1 = $request->positions[0]; // 最初の試合のポジション
-
-    // 2試合目以降の結果とポジションを設定
-    $match->result2 = $request->results[1] ?? null;
-    $match->position2 = $request->positions[1] ?? null;
-    $match->result3 = $request->results[2] ?? null;
-    $match->position3 = $request->positions[2] ?? null;
-    $match->result4 = $request->results[3] ?? null;
-    $match->position4 = $request->positions[3] ?? null;
-
+    $match->team_id = $request->team_id; // チームID
+    $match->opponent_team_id = $request->opponent_team_id; // 対戦相手のチームID
+    // その他の試合データを保存
     $match->save();
 
-    // マッチのリストページにリダイレクトする
-    return redirect()->route('matches.index')->with('success', '試合を記録しました');
+    return redirect()->route('matches.index')->with('success', '試合データが保存されました。');
     }
 
     public function search(Request $request)

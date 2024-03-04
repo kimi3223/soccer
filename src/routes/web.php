@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\MatchController;
 use App\Http\Controllers\PlayerController;
+use App\Http\Controllers\TeamController;
 
 /*
 |--------------------------------------------------------------------------
@@ -32,3 +33,14 @@ Route::get('/second', [MatchController::class, 'secondView']);
 Route::get('/third', [MatchController::class, 'thirdView']);
 
 Route::post('/players', [PlayerController::class, 'store']);
+Route::post('/savePlayer', [PlayerController::class, 'save']);
+
+// チーム名を登録するルート
+Route::get('/teams/create', [TeamController::class, 'create'])->name('teams.create');
+Route::post('/teams', [TeamController::class, 'store'])->name('teams.store');
+
+// フォーメーションを登録するルート
+Route::get('/teams/{team}/formation', [TeamController::class, 'createFormation'])->name('teams.createFormation');
+Route::post('/teams/{team}/formation', [TeamController::class, 'storeFormation'])->name('teams.storeFormation');
+
+Route::get('/', [TeamController::class, 'index'])->name('index');

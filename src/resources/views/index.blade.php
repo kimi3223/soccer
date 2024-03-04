@@ -217,21 +217,16 @@
 </select>
 
 <!-- チーム2の選択ボックス -->
-<div id="teamNameRight" style="position: absolute; top: 10px; right: 10px; padding: 5px; border: 1px solid #ccc; border-radius: 5px; background-color: #fff;">
-  <select style="border: none;" onchange="updateTeamName('teamNameRight', 'team2')">
-    <option value="Team 1">アミティエ</option>
-    <option value="Team 2">ALBA</option>
-    <option value="Team 3">ZERO(大阪)</option>
-    <option value="Team 4">フォルテ新宮</option>
-    <option value="Team 5">オシャラ</option>
-    <option value="Team 6">ヨーケン</option>
-    <option value="Team 7">神戸FC</option>
-    <option value="Team 8">Fenomeno</option>
-    <option value="Team 9">DREAM</option>
-    <option value="Team 10">ヴィッセル神戸</option>
-    <!-- 他のチーム名も選択肢として追加 -->
-  </select>
-</div>
+@isset($teams)
+    <div id="teamNameRight" style="position: absolute; top: 10px; right: 10px; padding: 5px; border: 1px solid #ccc; border-radius: 5px; background-color: #fff;">
+        <select style="border: none;" onchange="updateTeamName('teamNameRight', 'team2')">
+            @foreach($teams as $team)
+                <option value="{{ $team->id }}">{{ $team->name }}</option>
+            @endforeach
+        </select>
+    </div>
+@endisset
+
 <select id="teamSelectRight" style="position: absolute; top: 50px; right: 10px; padding: 5px; border: 1px solid #ccc; border-radius: 5px; background-color: #fff;" onchange="updateTeamFormation('team2')">
   <option value="3-3-1">3-3-1</option>
   <option value="3-3-1">3-2-2</option>
@@ -311,29 +306,8 @@ function showPlayerInfo(player) {
   modal.style.display = "block"; // モーダルを表示する
 }
 
-  // フォームの背番号入力欄の内容をリセット
+// フォームの背番号入力欄の内容をリセット
 document.getElementById("playerNumber").value = "";
-
-// 選手番号が存在し、フォームが存在する場合
-if (document.getElementById("playerNumber") && document.getElementById("playerForm")) {
-  var playerNumber = document.getElementById("playerNumber");
-  var playerForm = document.getElementById("playerForm");
-
-  // 選手番号の位置を取得
-  var rect = playerNumber.getBoundingClientRect();
-
-  // フォームを選手番号の右隣に配置
-  playerForm.style.display = "block";
-  playerForm.style.top = rect.top + "px";
-  playerForm.style.left = (rect.right + 10) + "px";
-}
-
-  // ここで選手の情報を表示する
-if (playerInfo) {
-  playerInfo.innerHTML = "選手名: " + player;
-}
-modal.style.display = "block";
-
 
 // モーダルを閉じる関数
 function closeModal() {
@@ -343,26 +317,31 @@ function closeModal() {
   }
 }
 
+// 選手情報をサーバーサイドに送信して保存する関数
 function savePlayer() {
     var playerNumber = document.getElementById("playerNumber").value;
     var foot = document.getElementById("foot").value;
     var goals = document.getElementById("goals").value;
     var feature = document.getElementById("feature").value;
 
+    // 選手情報をオブジェクトにまとめる
+    var playerInfo = {
+        playerNumber: playerNumber,
+        foot: foot,
+        goals: goals,
+        feature: feature
+    };
+
     // Ajaxリクエストを送信して選手情報を保存
     $.ajax({
-        url: '/players',
-        type: 'POST',
-        data: {
-            playerNumber: playerNumber,
-            foot: foot,
-            goals: goals,
-            feature: feature,
-            _token: '{{ csrf_token() }}'
-        },
+        url: '/savePlayer', // サーバーの保存用エンドポイントを指定
+        type: 'POST', // POSTリクエストを送信
+        data: playerInfo, // 選手情報をリクエストのデータとして送信
         success: function(response) {
             console.log(response);
-            // 成功した場合の処理を追加
+            // 成功時の処理を追加
+            closeModal(); // モーダルを閉じる
+            location.reload(); // ページをリロードして更新
         },
         error: function(xhr) {
             console.log(xhr.responseText);
@@ -437,7 +416,7 @@ function updateTeamFormation(teamId) {
   } else if (selectedFormation === '2-3-2') {
     // 2-3-2の配置に変更
   }
-
+}
 
 // プレイヤーのdiv要素を作成する関数
 function createPlayerDiv(player) {
@@ -449,6 +428,15 @@ function createPlayerDiv(player) {
   };
   return playerDiv;
 }
+
+function updateTeamName(selectId, inputId, fixedTeamName) {
+  var teamSelect = document.getElementById(selectId);
+  var teamNameInput = document.getElementById(inputId);
+
+  if (teamSelect && teamNameInput) {
+    // チーム名を固定する
+    teamNameInput.value = fixedTeamName;
+  }
 }
 </script>
 
