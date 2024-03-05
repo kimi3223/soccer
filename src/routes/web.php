@@ -33,10 +33,12 @@ Route::get('/second', [MatchController::class, 'secondView']);
 Route::get('/third', [MatchController::class, 'thirdView']);
 
 Route::post('/players', [PlayerController::class, 'store']);
+Route::get('/savePlayer', [PlayerController::class, 'save']);
 Route::post('/savePlayer', [PlayerController::class, 'save']);
 
 // チーム名を登録するルート
 Route::get('/teams/create', [TeamController::class, 'create'])->name('teams.create');
+Route::get('/teams', [TeamController::class, 'store']);
 Route::post('/teams', [TeamController::class, 'store'])->name('teams.store');
 
 // フォーメーションを登録するルート

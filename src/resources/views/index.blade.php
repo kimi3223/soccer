@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <title>3-3-1 Formation 3-3-1</title>
 <style>
   body, html {
@@ -98,8 +99,7 @@
 
   #teamSelectRight {
     position: absolute;
-    top: 50px; /* 上側からの距離 */
-    right: 10px; /* 右側からの距離 */
+    right: 1px; /* 右側からの距離 */
     padding: 5px;
     border: 1px solid #ccc;
     border-radius: 5px;
@@ -169,7 +169,20 @@
 
 </style>
 </head>
+
 <body>
+
+  <header>
+        <!-- ナビゲーションバー -->
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/matches">Matches</a></li>
+                <li><a href="/teams/create">Teams</a></li>
+            </ul>
+        </nav>
+  </header>
+
 <div class="field">
   <!-- チーム1の選手を配置する -->
   <div id="team1" class="team-container">
@@ -205,10 +218,10 @@
 </div>
 
 <!-- チーム1の選択ボックス -->
-<div id="teamNameLeft" style="position: absolute; top: 10px; left: 10px; padding: 5px; border: 1px solid #ccc; border-radius: 5px; background-color: #fff;">
+<div id="teamNameLeft" style="position: absolute; top: 30%; left: 10px; padding: 5px; border: 1px solid #ccc; border-radius: 5px; background-color: #fff;">
   バサラ兵庫
 </div>
-<select id="teamSelectLeft" style="position: absolute; top: 50px; left: 10px; padding: 5px; border: 1px solid #ccc; border-radius: 5px; background-color: #fff;" onchange="updateTeamFormation('team1')">
+<select id="teamSelectLeft" style="position: absolute; top: 40%; left: 10px; padding: 5px; border: 1px solid #ccc; border-radius: 5px; background-color: #fff;" onchange="updateTeamFormationLeft('team1')">
   <option value="3-3-1">3-3-1</option>
   <option value="3-3-1">2-4-1</option>
   <option value="3-3-1">3-2-2</option>
@@ -218,8 +231,8 @@
 
 <!-- チーム2の選択ボックス -->
 @isset($teams)
-    <div id="teamNameRight" style="position: absolute; top: 10px; right: 10px; padding: 5px; border: 1px solid #ccc; border-radius: 5px; background-color: #fff;">
-        <select style="border: none;" onchange="updateTeamName('teamNameRight', 'team2')">
+    <div id="teamNameRight" style="position: absolute; top: 30%; right: 10px; padding: 5px;">
+        <select id="teamSelectRight" style="border: none;" onchange="updateTeamId()">
             @foreach($teams as $team)
                 <option value="{{ $team->id }}">{{ $team->name }}</option>
             @endforeach
@@ -227,13 +240,15 @@
     </div>
 @endisset
 
-<select id="teamSelectRight" style="position: absolute; top: 50px; right: 10px; padding: 5px; border: 1px solid #ccc; border-radius: 5px; background-color: #fff;" onchange="updateTeamFormation('team2')">
+<select id="teamSelectRight" style="position: absolute; top: 40%; right: 10px; padding: 5px; border: 1px solid #ccc; border-radius: 5px; background-color: #fff;" onchange="updateTeamFormationRight('team2')">
   <option value="3-3-1">3-3-1</option>
   <option value="3-3-1">3-2-2</option>
   <option value="3-3-1">2-4-1</option>
   <option value="3-3-1">2-3-2</option>
   <!-- 他のフォーメーションも選択肢として追加 -->
 </select>
+
+<button onclick="saveAllPlayers()" style="position: absolute; top: 10%; left: 90%;">一括保存</button>
 
 <!-- モーダル -->
 <div id="playerModal" class="modal">
@@ -284,161 +299,210 @@
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script>
-// ページ読み込み時にモーダルを非表示にする
-window.onload = function() {
-  closeModal();
-};
+// チームIDを保持する変数
+var selectedTeamId = null;
 
-// 選手をクリックした際にモーダルを表示する関数
-function showPlayerInfo(player) {
-  var modal = document.getElementById("playerModal");
-  var playerInfo = document.getElementById("playerInfo");
-  var playerForm = document.getElementById("playerForm");
-
-  if (playerInfo) {
-    playerInfo.innerHTML = "選手名: " + player; // 選手の情報を表示する
-  }
-
-  if (playerForm) {
-    playerForm.style.display = "block"; // 選手情報フォームを表示する
-  }
-
-  modal.style.display = "block"; // モーダルを表示する
-}
-
-// フォームの背番号入力欄の内容をリセット
-document.getElementById("playerNumber").value = "";
-
-// モーダルを閉じる関数
-function closeModal() {
-  var modal = document.getElementById("playerModal");
-  if (modal) {
-    modal.style.display = "none";
-  }
+// チームを選択した際にチームIDを保持する関数
+function selectTeam(teamId) {
+    selectedTeamId = teamId;
 }
 
 // 選手情報をサーバーサイドに送信して保存する関数
 function savePlayer() {
-    var playerNumber = document.getElementById("playerNumber").value;
-    var foot = document.getElementById("foot").value;
-    var goals = document.getElementById("goals").value;
-    var feature = document.getElementById("feature").value;
+    var teamId = $("#teamSelectRight").val(); // 選択されたチームのIDを取得
+    var playerNumber = $("#playerNumber").val();
+    var foot = $("#foot").val();
+    var goals = $("#goals").val();
+    var feature = $("#feature").val();
 
-    // 選手情報をオブジェクトにまとめる
     var playerInfo = {
+        team_id: teamId, // 選択されたチームのIDを選手情報に含める
         playerNumber: playerNumber,
         foot: foot,
         goals: goals,
         feature: feature
     };
 
+    // CSRF トークンを取得
+    var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
     // Ajaxリクエストを送信して選手情報を保存
     $.ajax({
-        url: '/savePlayer', // サーバーの保存用エンドポイントを指定
-        type: 'POST', // POSTリクエストを送信
-        data: playerInfo, // 選手情報をリクエストのデータとして送信
+        url: '/savePlayer',
+        type: 'POST',
+        data: playerInfo,
+        headers: {
+            'X-CSRF-TOKEN': csrfToken
+        },
         success: function(response) {
             console.log(response);
-            // 成功時の処理を追加
-            closeModal(); // モーダルを閉じる
-            location.reload(); // ページをリロードして更新
+            closeModal();
+            location.reload();
         },
         error: function(xhr) {
             console.log(xhr.responseText);
-            // エラー時の処理を追加
             alert('エラーが発生しました。選手情報の保存に失敗しました。');
         }
     });
 }
 
-function updateTeamFormation(teamId) {
-  var selectedFormation = document.getElementById(teamId === 'team1' ? 'teamSelectLeft' : 'teamSelectRight').value;
-  var teamContainer = document.getElementById(teamId);
-  teamContainer.innerHTML = ''; // プレイヤー配置をリセット
+// チームIDを更新する関数
+function updateTeamId() {
+    var teamId = $("#teamSelectRight").val(); // 選択されたチームのIDを取得
+    selectTeam(teamId); // 選択されたチームIDを保持する
 
-  if (selectedFormation === '3-3-1') {
-    var players = ['Player 1', 'Player 2', 'Player 3', 'Player 4', 'Player 5', 'Player 6', 'Player 7'];
-    var row1 = document.createElement('div');
-    row1.classList.add('row');
-    var row2 = document.createElement('div');
-    row2.classList.add('row');
-    var row3 = document.createElement('div');
-    row3.classList.add('row');
-
-    for (var i = 0; i < 1; i++) {
-      var playerDiv = createPlayerDiv(players[i]);
-      row1.appendChild(playerDiv);
-    }
-
-    for (var i = 1; i < 4; i++) {
-      var playerDiv = createPlayerDiv(players[i]);
-      row2.appendChild(playerDiv);
-    }
-
-    for (var i = 4; i < 7; i++) {
-      var playerDiv = createPlayerDiv(players[i]);
-      row3.appendChild(playerDiv);
-    }
-
-    teamContainer.appendChild(row1);
-    teamContainer.appendChild(row2);
-    teamContainer.appendChild(row3);
-  } else if (selectedFormation === '3-2-2') {
-    var players = ['Player 1', 'Player 2', 'Player 3', 'Player 4', 'Player 5', 'Player 6', 'Player 7'];
-    var row1 = document.createElement('div');
-    row1.classList.add('row');
-    var row2 = document.createElement('div');
-    row2.classList.add('row');
-    var row3 = document.createElement('div');
-    row3.classList.add('row');
-
-    for (var i = 0; i < 3; i++) {
-        var playerDiv = createPlayerDiv(players[i]);
-        row1.appendChild(playerDiv);
-    }
-
-    for (var i = 3; i < 5; i++) {
-        var playerDiv = createPlayerDiv(players[i]);
-        row2.appendChild(playerDiv);
-    }
-
-    for (var i = 5; i < 7; i++) {
-        var playerDiv = createPlayerDiv(players[i]);
-        row3.appendChild(playerDiv);
-    }
-
-    teamContainer.appendChild(row1);
-    teamContainer.appendChild(row2);
-    teamContainer.appendChild(row3);
-
-  } else if (selectedFormation === '2-4-1') {
-    // 2-4-1の配置に変更
-  } else if (selectedFormation === '2-3-2') {
-    // 2-3-2の配置に変更
-  }
+    // モーダルを開く
+    showPlayerInfoModal();
 }
 
-// プレイヤーのdiv要素を作成する関数
-function createPlayerDiv(player) {
-  var playerDiv = document.createElement('div');
-  playerDiv.classList.add('player');
-  playerDiv.textContent = player;
-  playerDiv.onclick = function() {
-    showPlayerInfo(player);
-  };
-  return playerDiv;
+// 選手情報入力用のモーダルを表示する関数
+function showPlayerInfoModal() {
+    var modal = document.getElementById("playerModal");
+    var playerInfo = document.getElementById("playerInfo");
+    var playerForm = document.getElementById("playerForm");
+
+    if (playerInfo) {
+        playerInfo.innerHTML = ""; // 選手情報をクリア
+    }
+
+    if (playerForm) {
+        playerForm.style.display = "block"; // 選手情報フォームを表示する
+    }
+
+    modal.style.display = "block"; // モーダルを表示する
 }
 
-function updateTeamName(selectId, inputId, fixedTeamName) {
-  var teamSelect = document.getElementById(selectId);
-  var teamNameInput = document.getElementById(inputId);
+// ページ読み込み時にモーダルを非表示にする
+$(document).ready(function() {
+    closeModal();
+});
 
-  if (teamSelect && teamNameInput) {
-    // チーム名を固定する
-    teamNameInput.value = fixedTeamName;
-  }
+// 選手をクリックした際にモーダルを表示する関数
+function showPlayerInfo(player) {
+    var modal = document.getElementById("playerModal");
+    var playerInfo = document.getElementById("playerInfo");
+    var playerForm = document.getElementById("playerForm");
+
+    if (playerInfo) {
+        playerInfo.innerHTML = "選手名: " + player; // 選手の情報を表示する
+    }
+
+    if (playerForm) {
+        playerForm.style.display = "block"; // 選手情報フォームを表示する
+    }
+
+    modal.style.display = "block"; // モーダルを表示する
 }
+
+// フォームの背番号入力欄の内容をリセット
+$("#playerNumber").val("");
+
+// モーダルを閉じる関数
+function closeModal() {
+    var modal = document.getElementById("playerModal");
+    if (modal) {
+        modal.style.display = "none";
+    }
+}
+
+// 一括保存ボタンがクリックされたときの処理
+function saveAllPlayers() {
+    var teamId = $("#teamSelectRight").val(); // チームIDを取得
+    var matchFormation = $("#teamSelectRight").val(); // マッチのフォーメーションを取得
+
+    // 7人分の選手情報を収集
+    var playersData = [];
+    for (var i = 1; i <= 7; i++) {
+        var playerNumber = $("#playerNumber" + i).val();
+        var foot = $("#foot" + i).val();
+        var goals = $("#goals" + i).val();
+        var feature = $("#feature" + i).val();
+
+        // 選手情報をオブジェクトに追加
+        var playerInfo = {
+            team_id: teamId,
+            playerNumber: playerNumber,
+            foot: foot,
+            goals: goals,
+            feature: feature
+        };
+
+        playersData.push(playerInfo);
+    }
+
+    // Ajaxリクエストを送信して選手情報を保存
+    $.ajax({
+        url: '/savePlayersAndMatch', // サーバーの一括保存用エンドポイントを指定
+        type: 'POST', // POSTリクエストを送信
+        data: {
+            matchFormation: matchFormation, // マッチのフォーメーションを送信
+            players: playersData // 一括保存する選手情報をリクエストのデータとして送信
+        },
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') // CSRFトークンをリクエストヘッダーに追加
+        },
+        success: function(response) {
+            console.log(response);
+            closeModal(); // モーダルを閉じる
+            location.reload(); // ページをリロードして更新
+        },
+        error: function(xhr) {
+            console.log(xhr.responseText);
+            alert('エラーが発生しました。選手情報の保存に失敗しました。');
+        }
+    });
+}
+
+function updateTeamFormationLeft(team) {
+    var selectedFormation = document.getElementById('teamSelectLeft').value;
+
+    // Ajaxリクエストを送信してフォーメーション情報をサーバーに送信
+    $.ajax({
+        type: 'POST',
+        url: '/saveTeamFormation',
+        data: {
+            team: team,
+            formation: selectedFormation
+        },
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function(response) {
+            console.log('Left formation saved successfully!');
+        },
+        error: function(xhr, status, error) {
+            console.error('Error occurred while saving left formation:', error);
+        }
+    });
+}
+
+function updateTeamFormationRight(team) {
+    var selectedFormation = document.getElementById('teamSelectRight').value;
+
+    // Ajaxリクエストを送信してフォーメーション情報をサーバーに送信
+    $.ajax({
+        type: 'POST',
+        url: '/saveTeamFormation',
+        data: {
+            team: team,
+            formation: selectedFormation
+        },
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function(response) {
+            console.log('Right formation saved successfully!');
+        },
+        error: function(xhr, status, error) {
+            console.error('Error occurred while saving right formation:', error);
+        }
+    });
+}
+
 </script>
 
+<footer>
+    <p>&copy; 2024 Soccer App</p>
+</footer>
 </body>
 </html>

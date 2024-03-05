@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Match;
+use App\Models\Player;
 use Illuminate\Support\Facades\DB;
 
 class MatchController extends Controller
@@ -65,4 +66,48 @@ class MatchController extends Controller
         // ここでビューを表示する処理を記述
         return view('third');
     }
+
+    public function saveAllData(Request $request)
+{
+    // フォームから送信されたデータを取得
+    $team1Formation = $request->input('team1Formation');
+    $team2Formation = $request->input('team2Formation');
+    $team1Players = $request->input('team1Players');
+    $team2Players = $request->input('team2Players');
+
+    // マッチの試合情報を保存
+    $match = new Match();
+    $match->team1_id = $request->input('team1_id');
+    $match->team2_id = $request->input('team2_id');
+    $match->team1_formation = $team1Formation;
+    $match->team2_formation = $team2Formation;
+    // その他の試合データを必要に応じて保存
+    $match->save();
+
+    // チーム１の選手情報を保存
+    foreach ($team1Players as $playerData) {
+        Player::create([
+            'team_id' => $request->input('team1_id'),
+            'player_number' => $playerData['playerNumber'],
+            'foot' => $playerData['foot'],
+            'goals' => $playerData['goals'],
+            'feature' => $playerData['feature']
+        ]);
+    }
+
+    // チーム２の選手情報を保存
+    foreach ($team2Players as $playerData) {
+        Player::create([
+            'team_id' => $request->input('team2_id'),
+            'player_number' => $playerData['playerNumber'],
+            'foot' => $playerData['foot'],
+            'goals' => $playerData['goals'],
+            'feature' => $playerData['feature']
+        ]);
+    }
+
+    // 成功した場合は適切なレスポンスを返す
+    return Redirect::to('/')->with('success', 'Data saved successfully');
+}
+
 }
