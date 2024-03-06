@@ -8,15 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 class Match extends Model
 {
     use HasFactory;
-    protected $fillable = ['date', 'opponent', 'result', 'position', 'comment'];
+    protected $fillable = ['date', 'opponent_team', 'result'];
 
-    public function homeTeam()
+    public function formations()
     {
-        return $this->belongsTo(Team::class, 'team1_id');
-    }
-
-    public function awayTeam()
-    {
-        return $this->belongsTo(Team::class, 'team2_id');
+        return $this->hasMany(Formation::class);
     }
 }

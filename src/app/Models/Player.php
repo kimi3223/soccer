@@ -8,15 +8,15 @@ use Illuminate\Database\Eloquent\Model;
 class Player extends Model
 {
     use HasFactory;
-    protected $fillable = ['player_number', 'foot', 'goals', 'feature', 'team_id'];
-
-    // デフォルト値を設定
-    protected $attributes = [
-        'team_id' => null,
-    ];
+    protected $fillable = ['team_id', 'player_number', 'foot', 'goals', 'feature'];
 
     public function team()
     {
         return $this->belongsTo(Team::class);
+    }
+
+    public function formations()
+    {
+        return $this->hasMany(Formation::class);
     }
 }
