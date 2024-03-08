@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>3-2-2 Formation 3-3-1</title>
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>Past match results</title>
 <style>
   body, html {
     margin: 0;
@@ -20,103 +21,53 @@
     position: relative;
   }
 
+  .field {
+    display: flex;
+  }
+
+  .team-container {
+    width: 50%;
+    position: relative;
+    border: 1px solid #000;
+  }
+
   .player {
-    width: 50px;
-    height: 50px;
-    background-color: #fff;
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background-color: blue;
+    color: white;
     border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 50px;
+    text-align: center;
+    line-height: 40px;
+    font-size: 14px;
     cursor: pointer;
-    font-size: 24px;
   }
 
-  .player span {
-  display: inline-block;
-  }
-
-  /* チーム1の選手を配置するスタイル */
-  #team1 {
-    display: flex;
-    align-items: center;
+  .player-form-container {
     position: absolute;
-    left: 25%; /* 左側の中央に配置 */
-    top: 50%; /* 上側の中央に配置 */
-    transform: translate(-50%, -50%); /* 中央揃え */
-  }
+    display: none;
+    background-color: #ffffff;
+    border: 1px solid #000000;
+    padding: 10px;
+    z-index: 999; /* 選手の上に表示されるようにする */
+}
 
-  #team1 .row {
+.player-form-container.active {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-right: 20px;
-    margin-top: 40px
-  }
+    top: calc(50% - 100px); /* 選手の中央に配置 */
+    left: calc(50% + 50px); /* 選手の右側に配置 */
+    /* 他の適切なスタイルを追加 */
+}
 
-  /* チーム1の選手を配置するスタイル */
-  #team2 {
-    display: flex;
-    align-items: center;
-    position: absolute;
-    left: 75%; /* 左側の中央に配置 */
-    top: 50%; /* 上側の中央に配置 */
-    transform: translate(-50%, -50%); /* 中央揃え */
-  }
-
-  #team2 .row {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-right: 20px;
-    margin-top: 40px
-  }
-
-  .player7 {
-    width: 50px;
-    height: 50px;
+  .player-form {
     background-color: #fff;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    margin-right: 20px;
+    border: 1px solid #000;
+    padding: 10px;
   }
 
-  /* 選択ボックスのスタイル */
-  #teamSelectLeft {
-    position: absolute;
-    top: 50px; /* 上側からの距離 */
-    left: 10px; /* 左側からの距離 */
-    padding: 5px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background-color: #fff;
-  }
-
-  #teamSelectRight {
-    position: absolute;
-    top: 50px; /* 上側からの距離 */
-    right: 10px; /* 右側からの距離 */
-    padding: 5px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background-color: #fff;
-  }
-
-  /* 選手の背番号のスタイル */
-  .player-number {
-    width: 30px;
-    height: 30px;
-    background-color: #4CAF50; /* 青色 */
-    color: #fff;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
+  #save-all-players {
+    float: right;
   }
 
   /* モーダルのスタイル */
@@ -152,297 +103,200 @@
     cursor: pointer;
   }
 
-  /* 新しいフォーメーションのスタイル */
-  #team1 .player:nth-child(4),
-  #team1 .player:nth-child(5) {
-    margin-right: 0; /* 3-2-2の場合、この選手の間隔は不要 */
-  }
-
-  #team1 .player:nth-child(5),
-  #team1 .player:nth-child(6) {
-    margin-bottom: 0; /* 3-2-2の場合、この選手の下の間隔は不要 */
-  }
-
-  #team1 .player7 {
-    margin-right: 20px; /* フォーメーションに基づいて適切な間隔を設定 */
-  }
-
 </style>
 </head>
+
 <body>
-<div class="field">
-  <!-- チーム1の選手を配置する -->
-  <div id="team1" class="team-container">
-    <div class="row">
-      <div class="player" onclick="showPlayerInfo('Player 1')"></div>
-      <div class="player" onclick="showPlayerInfo('Player 2')"></div>
-      <div class="player" onclick="showPlayerInfo('Player 3')"></div>
-    </div>
-    <div class="row">
-      <div class="player" onclick="showPlayerInfo('Player 4')"></div>
-      <div class="player" onclick="showPlayerInfo('Player 5')"></div>
-    </div>
-    <div class="row">
-      <div class="player" onclick="showPlayerInfo('Player 6')"></div>
-      <div class="player" onclick="showPlayerInfo('Player 7')"></div>
-    </div>
+
+  <header>
+        <!-- ナビゲーションバー -->
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/matches">Matches</a></li>
+                <li><a href="/teams/create">Teams</a></li>
+            </ul>
+        </nav>
+        <!-- 日付検索フォーム -->
+        <div>
+            <label for="match-date">試合日付：</label>
+            <input type="date" id="match-date" name="match-date">
+            <button id="search-match">検索</button>
+        </div>
+  </header>
+
+  <div class="field">
+        <!-- チーム1の選手配置フォーム（左側） -->
+        <div class="team-container" id="team1-container">
+            <!-- 選手の配置はJavaScriptで動的に生成 -->
+        </div>
+
+        <!-- チーム2の選手配置フォーム（右側） -->
+        <div class="team-container" id="team2-container">
+            <!-- 選手の配置はJavaScriptで動的に生成 -->
+        </div>
   </div>
 
-  <!-- チーム2の選手を配置する（未実装） -->
-  <div id="team2" class="team-container">
-    <div class="player7" onclick="showPlayerInfo('Player 2-7')"></div>
-    <div class="row">
-      <div class="player" onclick="showPlayerInfo('Player 2-6')"></div>
-      <div class="player" onclick="showPlayerInfo('Player 2-5')"></div>
-      <div class="player" onclick="showPlayerInfo('Player 2-4')"></div>
-    </div>
-    <div class="row">
-      <div class="player" onclick="showPlayerInfo('Player 2-3')"></div>
-      <div class="player" onclick="showPlayerInfo('Player 2-2')"></div>
-      <div class="player" onclick="showPlayerInfo('Player 2-1')"></div>
-    </div>
-  </div>
-</div>
-
-<!-- チーム1の選択ボックス -->
-<div id="teamNameLeft" style="position: absolute; top: 10px; left: 10px; padding: 5px; border: 1px solid #ccc; border-radius: 5px; background-color: #fff;">
-  バサラ兵庫
-</div>
-<select id="teamSelectLeft" style="position: absolute; top: 50px; left: 10px; padding: 5px; border: 1px solid #ccc; border-radius: 5px; background-color: #fff;" onchange="updateTeamFormation('team1')">
-  <option value="3-3-1">3-2-2</option>
-  <option value="3-3-1">2-4-1</option>
-  <option value="3-3-1">3-3-1</option>
-  <option value="3-3-1">2-3-2</option>
-  <!-- 他のフォーメーションも選択肢として追加 -->
-</select>
-
-<!-- チーム2の選択ボックス -->
-<div id="teamNameRight" style="position: absolute; top: 10px; right: 10px; padding: 5px; border: 1px solid #ccc; border-radius: 5px; background-color: #fff;">
-  <select style="border: none;" onchange="updateTeamName('teamNameRight', 'team2')">
-    <option value="Team 1">アミティエ</option>
-    <option value="Team 2">ALBA</option>
-    <option value="Team 3">ZERO(大阪)</option>
-    <option value="Team 4">フォルテ新宮</option>
-    <option value="Team 5">オシャラ</option>
-    <option value="Team 6">ヨーケン</option>
-    <option value="Team 7">神戸FC</option>
-    <option value="Team 8">Fenomeno</option>
-    <option value="Team 9">DREAM</option>
-    <option value="Team 10">ヴィッセル神戸</option>
-    <!-- 他のチーム名も選択肢として追加 -->
-  </select>
-</div>
-<select id="teamSelectRight" style="position: absolute; top: 50px; right: 10px; padding: 5px; border: 1px solid #ccc; border-radius: 5px; background-color: #fff;" onchange="updateTeamFormation('team2')">
-  <option value="3-3-1">3-3-1</option>
-  <option value="3-3-1">3-2-2</option>
-  <option value="3-3-1">2-4-1</option>
-  <option value="3-3-1">2-3-2</option>
-  <!-- 他のフォーメーションも選択肢として追加 -->
-</select>
-
-<!-- モーダル -->
-<div id="playerModal" class="modal">
-  <div class="modal-content">
-    <span class="close" onclick="closeModal()">&times;</span>
-    <h2>選手情報</h2>
-    <!-- 選手情報フォームと表示 -->
-    <div id="playerDetails" style="background-color: #fff; border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
-      <!-- 選手情報フォーム -->
-      <div id="playerForm" style="position: relative;">
-        <label for="playerNumber">背番号:</label>
-        <input type="number" id="playerNumber" name="playerNumber" min="1" max="99">
-        <br>
-        <label for="foot">利き足:</label>
-        <select id="foot">
-          <option value="right">右足</option>
-          <option value="left">左足</option>
+  <!-- チーム2の選択ボックス -->
+    <div>
+        <label for="teamSelectRight">相手チーム:</label>
+        <select id="teamSelectRight">
+        <!-- ここに選択肢を動的に追加する -->
         </select>
-        <br>
-        <label for="goals">ゴール数:</label>
-        <input type="number" id="goals" name="goals" min="0" max="20">
-        <br>
-        <label for="feature">特徴:</label>
-        <select id="feature">
-          <option value="dribble">ドリブル</option>
-          <option value="long-pass">ロングパス</option>
-          <option value="physical">フィジカル</option>
-          <option value="both-feet">両脚</option>
-        </select>
-        <br>
-        <button onclick="savePlayer()">保存</button>
-      </div>
-      <!-- 選手情報フォームここまで -->
-
-      <!-- 選手情報表示 -->
-      <div id="playerInfo" style="margin-top: 10px;">
-        <p>選手情報</p>
-        <p>背番号: <span id="displayPlayerNumber"></span></p>
-        <p>利き足: <span id="displayFoot"></span></p>
-        <p>ゴール数: <span id="displayGoals"></span></p>
-        <p>特徴: <span id="displayFeature"></span></p>
-      </div>
-      <!-- 選手情報表示ここまで -->
+        <button onclick="saveOpponentTeam()">相手チームを保存する</button>
     </div>
-    <!-- 選手情報フォームと表示ここまで -->
-  </div>
-</div>
 
-<!-- JavaScript -->
-<script>
-function updateTeamFormation(teamId) {
-  var selectedFormation = document.getElementById(teamId === 'team1' ? 'teamSelectLeft' : 'teamSelectRight').value;
-  var teamContainer = document.getElementById(teamId);
-  teamContainer.innerHTML = ''; // プレイヤー配置をリセット
+    <!-- 選手情報入力フォーム -->
+    <div class="player-form-container" id="player-form-container" >
+        <div id="player-form" class="player-form">
+            <label for="player-number">背番号：</label>
+            <input type="number" id="player-number" name="player-number" min="1" max="99"><br>
+            <label for="player-foot">利き足：</label>
+            <select id="player-foot" name="player-foot">
+                <option value="右足">右足</option>
+                <option value="左足">左足</option>
+                <option value="両足">両足</option>
+            </select><br>
+            <label for="player-feature">特徴：</label>
+            <select id="player-feature">
+              <option value="dribble">ドリブル</option>
+              <option value="long-pass">ロングパス</option>
+              <option value="physical">フィジカル</option>
+              <option value="both-feet">両脚</option>
+            </select><br>
+            <label for="player-goals">ゴール数：</label>
+            <input type="number" id="player-goals" name="player-goals" min="0" max="20"><br>
+            <button id="update-player">選手情報更新</button>
+            <button id="close-form">閉じる</button>
+        </div>
+    </div>
 
-  if (selectedFormation === '3-3-1') {
-    // 3-3-1の配置に変更
-  } else if (selectedFormation === '3-2-2') {
-    var players = ['Player 1', 'Player 2', 'Player 3', 'Player 4', 'Player 5', 'Player 6', 'Player 7'];
-    var row1 = document.createElement('div');
-    row1.classList.add('row');
-    var row2 = document.createElement('div');
-    row2.classList.add('row');
-    var row3 = document.createElement('div');
-    row3.classList.add('row');
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const team1Container = document.getElementById('team1-container');
+        const team2Container = document.getElementById('team2-container');
+        const playerFormContainer = document.getElementById('player-form-container');
+        const playerForm = document.getElementById('player-form');
 
-    for (var i = 0; i < 3; i++) {
-        var playerDiv = createPlayerDiv(players[i]);
-        row1.appendChild(playerDiv);
+    // 過去の試合データを取得して表示する関数
+    function fetchPastMatches() {
+    const matchDate = document.getElementById('match-date').value; // 日付検索フォームから日付を取得
+
+    // 過去の試合データを取得するAPIエンドポイントにリクエストを送信
+    fetch(`/api/matches?date=${matchDate}`)
+        .then(response => response.json()) // レスポンスをJSON形式に変換
+        .then(data => {
+            // 取得したデータを元に過去の試合データを表示
+            displayPastMatches(data);
+        })
+        .catch(error => {
+            console.error('Error fetching past matches:', error);
+        });
     }
 
-    for (var i = 3; i < 5; i++) {
-        var playerDiv = createPlayerDiv(players[i]);
-        row2.appendChild(playerDiv);
+    // 過去の試合データを表示する関数
+    function displayPastMatches() {
+        // データベースから取得した過去の試合データを元に表示を行う処理
+        // チーム1とチーム2の選手を配置する処理は以下の関数を利用する
+        generatePlayers(team1Container, '3-3-1', true); // 例：3-3-1のフォーメーションを左側に配置
+        generatePlayers(team2Container, '2-4-1', false); // 例：2-4-1のフォーメーションを右側に配置
     }
 
-    for (var i = 5; i < 7; i++) {
-        var playerDiv = createPlayerDiv(players[i]);
-        row3.appendChild(playerDiv);
+    // 選手を配置する関数
+    function generatePlayers(container, formation, isLeftSide) {
+        const positions = formation.split('-');
+        const containerHeight = container.offsetHeight;
+        let topPosition = (containerHeight - 40 * 7) / 2; // フィールドの縦半分に配置
+
+        // フォーメーションに基づいて選手を配置
+        for (let i = 0; i < positions.length; i++) {
+            const playersInLine = parseInt(positions[i]);
+            const spaceBetweenPlayers = (containerHeight - 40 * playersInLine) / (playersInLine + 1);
+
+            for (let j = 0; j < playersInLine; j++) {
+                const player = document.createElement('div');
+                player.className = 'player';
+                player.style.top = `${topPosition + spaceBetweenPlayers * (j + 1)}px`;
+
+                if (isLeftSide) {
+                    player.style.left = `${20 + i * 30}%`;
+                } else {
+                    player.style.right = `${20 + i * 30}%`;
+                }
+
+                player.textContent = `#${container.children.length + 1}`;
+                container.appendChild(player);
+
+                // 選手をクリックした場合のイベントリスナー
+                player.addEventListener('click', () => {
+                    // フォームを選手の右側に表示
+                    playerFormContainer.style.left = `${player.offsetLeft + player.offsetWidth}px`;
+                    playerFormContainer.style.top = `${player.offsetTop}px`;
+                    playerFormContainer.classList.add('active');
+                });
+            }
+        }
     }
 
-    teamContainer.appendChild(row1);
-    teamContainer.appendChild(row2);
-    teamContainer.appendChild(row3);
+    // フォーメーション選択時の処理
+    function handleFormationSelect() {
+        team1Container.innerHTML = ''; // 選手をクリア
+        team2Container.innerHTML = ''; // 選手をクリア
 
-  } else if (selectedFormation === '2-4-1') {
-    // 2-4-1の配置に変更
-    var players = ['Player 1', 'Player 2', 'Player 3', 'Player 4', 'Player 5', 'Player 6', 'Player 7'];
-    var row1 = document.createElement('div');
-    row1.classList.add('row');
-    var row2 = document.createElement('div');
-    row2.classList.add('row');
-    var row3 = document.createElement('div');
-    row3.classList.add('row');
+        const team1Formation = document.getElementById('team1-formation').value;
+        const team2Formation = document.getElementById('team2-formation').value;
 
-    for (var i = 0; i < 2; i++) {
-        var playerDiv = createPlayerDiv(players[i]);
-        row1.appendChild(playerDiv);
+        generatePlayers(team1Container, team1Formation, true); // チーム1は左側
+        generatePlayers(team2Container, team2Formation, false); // チーム2は右側
     }
 
-    for (var i = 2; i < 6; i++) {
-        var playerDiv = createPlayerDiv(players[i]);
-        row2.appendChild(playerDiv);
+    // 選手情報更新ボタンのクリックイベント
+    document.getElementById('update-player').addEventListener('click', () => {
+        playerFormContainer.classList.remove('active'); // フォームを非表示にする
+    });
+
+    // 入力フォームを閉じるボタンのクリックイベント
+    document.getElementById('close-form').addEventListener('click', () => {
+        playerFormContainer.classList.remove('active'); // フォームを非表示にする
+    });
+
+    // 一括保存ボタンのクリックイベント
+    document.getElementById('save-all-players').addEventListener('click', () => {
+        // データベースにデータを保存する処理
+    });
+
+    // フォーメーション選択ボックスの変更時に処理を実行
+    document.getElementById('team1-formation').addEventListener('change', handleFormationSelect);
+    document.getElementById('team2-formation').addEventListener('change', handleFormationSelect);
+
+    // ページロード時に初期配置を生成
+    fetchPastMatches();
+    });
+
+    function saveOpponentTeam() {
+        const selectedTeamId = document.getElementById('teamSelectRight').value;
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content'); // CSRFトークンを取得
+    fetch('/api/save-opponent-team', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken // CSRFトークンを追加
+        },
+        body: JSON.stringify({ teamId: selectedTeamId }),
+    })
+      .then(response => response.json())
+      .then(data => {
+          alert('チーム名が保存されました！');
+    })
+      .catch(error => {
+          console.error('Error saving opponent team:', error);
+    });
     }
+    </script>
 
-    var playerDiv = createPlayerDiv(players[6]);
-    row3.appendChild(playerDiv);
-
-    teamContainer.appendChild(row1);
-    teamContainer.appendChild(row2);
-    teamContainer.appendChild(row3);
-  } else if (selectedFormation === '2-3-2') {
-    // 2-3-2の配置に変更
-  }
-}
-
-// プレイヤーのdiv要素を作成する関数
-function createPlayerDiv(player) {
-  var playerDiv = document.createElement('div');
-  playerDiv.classList.add('player');
-  playerDiv.textContent = player;
-  playerDiv.onclick = function() {
-    showPlayerInfo(player);
-  };
-  return playerDiv;
-}
-
-// ページ読み込み時にモーダルを非表示にする
-window.onload = function() {
-  closeModal();
-};
-
-// 選手をクリックした際にモーダルを表示する関数
-function showPlayerInfo(player) {
-  var modal = document.getElementById("playerModal");
-  var playerInfo = document.getElementById("playerInfo");
-  var playerForm = document.getElementById("playerForm");
-
-  if (playerInfo) {
-    playerInfo.innerHTML = "選手名: " + player; // 選手の情報を表示する
-  }
-
-  if (playerForm) {
-    playerForm.style.display = "block"; // 選手情報フォームを表示する
-  }
-
-  modal.style.display = "block"; // モーダルを表示する
-}
-
-  // フォームの背番号入力欄の内容をリセット
-document.getElementById("playerNumber").value = "";
-
-// 選手番号が存在し、フォームが存在する場合
-if (document.getElementById("playerNumber") && document.getElementById("playerForm")) {
-  var playerNumber = document.getElementById("playerNumber");
-  var playerForm = document.getElementById("playerForm");
-
-  // 選手番号の位置を取得
-  var rect = playerNumber.getBoundingClientRect();
-
-  // フォームを選手番号の右隣に配置
-  playerForm.style.display = "block";
-  playerForm.style.top = rect.top + "px";
-  playerForm.style.left = (rect.right + 10) + "px";
-}
-
-  // ここで選手の情報を表示する
-if (playerInfo) {
-  playerInfo.innerHTML = "選手名: " + player;
-}
-modal.style.display = "block";
-
-
-// モーダルを閉じる関数
-function closeModal() {
-  var modal = document.getElementById("playerModal");
-  if (modal) {
-    modal.style.display = "none";
-  }
-}
-
-// 選手情報を保存する関数
-function savePlayer() {
-  var foot = document.getElementById("foot").value;
-  var goals = document.getElementById("goals").value;
-  var feature = document.getElementById("feature").value;
-  var playerNumber = document.getElementById("playerNumber").value;
-
-  // プレーヤーの数字を背番号に変更する
-  var playerInfo = document.getElementById("playerInfo");
-  var playerNumberElement = playerInfo.querySelector('.player-number');
-  if (playerNumberElement) {
-    playerNumberElement.textContent = playerNumber;
-  }
-  // 選手情報を表示
-  playerInfo.innerHTML += "<br>背番号: " + playerNumber + "<br>利き足: " + foot + "<br>ゴール数: " + goals + "<br>特徴: " + feature;
-
-  // 保存された情報を使って何かをする（例えば、データベースに保存するなど）
-
-  // モーダルを閉じる
-  closeModal();
-}
-
-</script>
+    <footer>
+      <p>&copy; 2024 Soccer App</p>
+    </footer>
 
 </body>
 </html>

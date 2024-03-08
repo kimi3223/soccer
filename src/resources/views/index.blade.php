@@ -178,11 +178,11 @@
     <button id="save-all-players">一括保存</button>
 
     <script>
-      document.addEventListener('DOMContentLoaded', function() {
-    const team1Container = document.getElementById('team1-container');
-    const team2Container = document.getElementById('team2-container');
-    const playerFormContainer = document.getElementById('player-form-container');
-    const playerForm = document.getElementById('player-form');
+    document.addEventListener('DOMContentLoaded', function() {
+        const team1Container = document.getElementById('team1-container');
+        const team2Container = document.getElementById('team2-container');
+        const playerFormContainer = document.getElementById('player-form-container');
+        const playerForm = document.getElementById('player-form');
 
     function generatePlayers(container, formation, isLeftSide) {
         const positions = formation.split('-');
