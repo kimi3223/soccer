@@ -140,9 +140,7 @@
   <!-- チーム2の選択ボックス -->
     <div>
         <label for="teamSelectRight">相手チーム:</label>
-        <select id="teamSelectRight">
-        <!-- ここに選択肢を動的に追加する -->
-        </select>
+        <select id="teamSelectRight"></select>
         <button onclick="saveOpponentTeam()">相手チームを保存する</button>
     </div>
 
@@ -177,21 +175,37 @@
         const team2Container = document.getElementById('team2-container');
         const playerFormContainer = document.getElementById('player-form-container');
         const playerForm = document.getElementById('player-form');
+        const teamSelectRight = document.getElementById('teamSelectRight');
 
     // 過去の試合データを取得して表示する関数
     function fetchPastMatches() {
-    const matchDate = document.getElementById('match-date').value; // 日付検索フォームから日付を取得
+        const matchDate = document.getElementById('match-date').value; // 日付検索フォームから日付を取得
 
-    // 過去の試合データを取得するAPIエンドポイントにリクエストを送信
-    fetch(`/api/matches?date=${matchDate}`)
-        .then(response => response.json()) // レスポンスをJSON形式に変換
-        .then(data => {
-            // 取得したデータを元に過去の試合データを表示
-            displayPastMatches(data);
-        })
-        .catch(error => {
-            console.error('Error fetching past matches:', error);
-        });
+        // 過去の試合データを取得するAPIエンドポイントにリクエストを送信
+        fetch(`/api/matches?date=${matchDate}`)
+            .then(response => response.json()) // レスポンスをJSON形式に変換
+            .then(data => {
+                // 取得したデータを元に過去の試合データを表示
+                displayPastMatches(data);
+            })
+            .catch(error => {
+                console.error('Error fetching past matches:', error);
+            });
+
+        // チーム名のリストを取得して選択ボックスに追加
+        fetch('/api/teams')
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(team => {
+                    const option = document.createElement('option');
+                    option.value = team.id;
+                    option.textContent = team.name;
+                    teamSelectRight.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching teams:', error);
+            });
     }
 
     // 過去の試合データを表示する関数
@@ -274,8 +288,8 @@
     });
 
     function saveOpponentTeam() {
-        const selectedTeamId = document.getElementById('teamSelectRight').value;
-        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content'); // CSRFトークンを取得
+    const selectedTeamId = document.getElementById('teamSelectRight').value;
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content'); // CSRFトークンを取得
     fetch('/api/save-opponent-team', {
         method: 'POST',
         headers: {
@@ -284,12 +298,12 @@
         },
         body: JSON.stringify({ teamId: selectedTeamId }),
     })
-      .then(response => response.json())
-      .then(data => {
-          alert('チーム名が保存されました！');
+    .then(response => response.json())
+    .then(data => {
+        alert('チーム名が保存されました！');
     })
-      .catch(error => {
-          console.error('Error saving opponent team:', error);
+    .catch(error => {
+        console.error('Error saving opponent team:', error);
     });
     }
     </script>

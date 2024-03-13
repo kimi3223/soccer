@@ -149,6 +149,22 @@
         </select>
     </div>
 
+    <!-- チーム2の選択ボックス -->
+    <div>
+        <label for="teamSelectRight">相手チーム:</label>
+        <select id="teamSelectRight"></select>
+        <button onclick="saveOpponentTeam()">相手チームを保存する</button>
+    </div>
+
+    <!-- チーム2の選択ボックス -->
+    @isset($teams)
+    <script>
+        // BladeテンプレートからPHP変数をJavaScriptに渡す
+        const teamsData = @json($teams);
+        console.log(teamsData); // データが正しく渡されていることを確認
+    </script>
+    @endisset
+
     <!-- 選手情報入力フォーム -->
     <div class="player-form-container" id="player-form-container" >
         <div id="player-form" class="player-form">
@@ -178,11 +194,21 @@
     <button id="save-all-players">一括保存</button>
 
     <script>
+
+      // チームIDを保持する変数
+var selectedTeamId = null;
+
+// チームを選択した際にチームIDを保持する関数
+function selectTeam(teamId) {
+    selectedTeamId = teamId;
+}
+
     document.addEventListener('DOMContentLoaded', function() {
         const team1Container = document.getElementById('team1-container');
         const team2Container = document.getElementById('team2-container');
         const playerFormContainer = document.getElementById('player-form-container');
         const playerForm = document.getElementById('player-form');
+        const teamSelectRight = document.getElementById('teamSelectRight');
 
     function generatePlayers(container, formation, isLeftSide) {
         const positions = formation.split('-');
@@ -254,6 +280,16 @@
     handleFormationSelect();
 });
 
+    // fetchTeams関数を削除し、Bladeテンプレートから渡されたデータを使用する
+    document.addEventListener('DOMContentLoaded', function() {
+    // teamsDataを使用して選択ボックスにチーム名を追加する
+    teamsData.forEach(team => {
+        const option = document.createElement('option');
+        option.value = team.id; // チームのIDをvalueとしてセット
+        option.textContent = team.name; // チーム名を表示
+        document.getElementById('teamSelectRight').appendChild(option);
+    });
+});
     </script>
 <footer>
     <p>&copy; 2024 Soccer App</p>
