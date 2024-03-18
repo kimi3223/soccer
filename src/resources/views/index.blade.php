@@ -120,6 +120,21 @@
     cursor: pointer;
     }
 
+    /* チーム1の選手の背景色を青に設定 */
+    .player.team1 {
+        background-color: blue;
+        color: white; /* 選手の文字色を白に設定 */
+    }
+
+    /* チーム2の選手の背景色を赤に設定 */
+    .player.team2 {
+    background-color: red;
+    color: white; /* 選手の文字色を白に設定 */
+    }
+
+    footer {
+        text-align: center; /* テキストを中央揃えにする */
+    }
 </style>
 </head>
 
@@ -134,6 +149,13 @@
     </nav>
 </header>
 
+<!-- チーム2の選択ボックス -->
+<div>
+    <label for="teamSelectRight">相手チーム:</label>
+    <select id="teamSelectRight"></select>
+    <button onclick="saveOpponentTeam()">相手チームを保存する</button>
+</div>
+
 <div>
     <label for="match-date">試合日時：</label>
     <input type="datetime-local" id="match-date" name="match-date"><br>
@@ -143,18 +165,6 @@
         <label for="team-goals"> - </label>
         <span id="team2-goals">0</span>
         <span id="team2-name"></span>
-    </div>
-</div>
-
-<div class="field">
-    <!-- チーム1の選手配置フォーム（左側） -->
-    <div class="team-container" id="team1-container">
-        <!-- 選手の配置はJavaScriptで動的に生成 -->
-    </div>
-
-    <!-- チーム2の選手配置フォーム（右側） -->
-    <div class="team-container" id="team2-container">
-        <!-- 選手の配置はJavaScriptで動的に生成 -->
     </div>
 </div>
 
@@ -174,6 +184,21 @@
         <option value="3-2-2">3-2-2</option>
         <option value="2-3-2">2-3-2</option>
     </select>
+</div>
+
+<!-- ホームの右上のヘッダー部分に一括保存ボタン -->
+<button id="save-all-players">一括保存</button>
+
+<div class="field">
+    <!-- チーム1の選手配置フォーム（左側） -->
+    <div class="team-container" id="team1-container">
+        <!-- 選手の配置はJavaScriptで動的に生成 -->
+    </div>
+
+    <!-- チーム2の選手配置フォーム（右側） -->
+    <div class="team-container" id="team2-container">
+        <!-- 選手の配置はJavaScriptで動的に生成 -->
+    </div>
 </div>
 
 <!-- 選手情報入力フォーム -->
@@ -201,13 +226,6 @@
     </div>
 </div>
 
-<!-- チーム2の選択ボックス -->
-<div>
-    <label for="teamSelectRight">相手チーム:</label>
-    <select id="teamSelectRight"></select>
-    <button onclick="saveOpponentTeam()">相手チームを保存する</button>
-</div>
-
 @isset($teams)
 <script>
     const teamsData = @json($teams); // PHP変数からJavaScript配列に変換
@@ -224,53 +242,54 @@
 </script>
 @endisset
 
-<!-- ホームの右上のヘッダー部分に一括保存ボタン -->
-<button id="save-all-players">一括保存</button>
-
 <script>
-    // generatePlayers関数を定義
-function generatePlayers(container, formation, isLeftSide) {
-    const positions = formation.split('-');
-    const containerHeight = container.offsetHeight;
-    const playerFormContainer = document.getElementById('player-form-container');
-    let topPosition = (containerHeight - 40 * 7) / 2; // フィールドの縦半分に配置
-
-    // フォーメーションに基づいて選手を配置
-    for (let i = 0; i < positions.length; i++) {
-        const playersInLine = parseInt(positions[i]);
-        const spaceBetweenPlayers = (containerHeight - 40 * playersInLine) / (playersInLine + 1);
-
-        for (let j = 0; j < playersInLine; j++) {
-            const player = document.createElement('div');
-            player.className = 'player';
-            player.style.top = `${topPosition + spaceBetweenPlayers * (j + 1)}px`;
-
-            if (isLeftSide) {
-                player.style.left = `${20 + i * 30}%`;
-            } else {
-                player.style.right = `${20 + i * 30}%`;
-            }
-
-            player.textContent = `#${container.children.length + 1}`;
-            container.appendChild(player);
-
-            // 選手をクリックした場合のイベントリスナー
-            player.addEventListener('click', () => {
-                // フォームを選手の右側に表示
-                playerFormContainer.style.left = `${player.offsetLeft + player.offsetWidth}px`;
-                playerFormContainer.style.top = `${player.offsetTop}px`;
-                playerFormContainer.classList.add('active');
-            });
-        }
-    }
-}
-
 document.addEventListener('DOMContentLoaded', function() {
     const team1Container = document.getElementById('team1-container');
     const team2Container = document.getElementById('team2-container');
-    const playerFormContainer = document.getElementById('player-form-container');
-    const playerForm = document.getElementById('player-form');
-    const teamSelectRight = document.getElementById('teamSelectRight');
+    
+    // generatePlayers関数を定義
+    function generatePlayers(container, formation, isLeftSide, teamClass) {
+        const positions = formation.split('-');
+        const containerHeight = container.offsetHeight;
+        let topPosition = (containerHeight - 40 * 7) / 2; // フィールドの縦半分に配置
+
+        // フォーメーションに基づいて選手を配置
+        for (let i = 0; i < positions.length; i++) {
+            const playersInLine = parseInt(positions[i]);
+            const spaceBetweenPlayers = (containerHeight - 40 * playersInLine) / (playersInLine + 1);
+
+            for (let j = 0; j < playersInLine; j++) {
+                const player = document.createElement('div');
+                player.className = `player ${teamClass}`; // チームを表すクラスを追加
+                player.style.top = `${topPosition + spaceBetweenPlayers * (j + 1)}px`;
+
+                if (isLeftSide) {
+                    player.style.left = `${20 + i * 30}%`;
+                } else {
+                    player.style.right = `${20 + i * 30}%`;
+                }
+
+                player.textContent = `#${container.children.length + 1}`;
+                container.appendChild(player);
+
+                // 選手をクリックした場合のイベントリスナー
+                player.addEventListener('click', () => {
+                    // フォームを選手の右側に表示
+                    playerFormContainer.style.left = `${player.offsetLeft + player.offsetWidth}px`;
+                    playerFormContainer.style.top = `${player.offsetTop}px`;
+                    playerFormContainer.classList.add('active');
+                });
+            }
+        }
+    }
+
+    // チームIDを保持する変数
+    let selectedTeamId = null;
+
+    // チームを選択した際にチームIDを保持する関数
+    function selectTeam(teamId) {
+        selectedTeamId = teamId;
+    }
 
     // チーム名を選択ボックスに追加する関数
     function addTeamOption(teamId, teamName) {
@@ -278,41 +297,6 @@ document.addEventListener('DOMContentLoaded', function() {
         option.value = teamId;
         option.textContent = teamName;
         teamSelectRight.appendChild(option);
-    }
-
-
-    // 選手をクリックした場合のイベントリスナー（チーム1）
-    team1Container.addEventListener('click', (event) => {
-        const player = event.target;
-        if (player.classList.contains('player')) {
-            if (playerFormContainer) {
-                // フォームを選手の右側に表示
-                playerFormContainer.style.left = `${player.offsetLeft + player.offsetWidth}px`;
-                playerFormContainer.style.top = `${player.offsetTop}px`;
-                playerFormContainer.classList.add('active');
-            }
-        }
-    });
-
-    // 選手をクリックした場合のイベントリスナー（チーム2）
-    team2Container.addEventListener('click', (event) => {
-        const player = event.target;
-        if (player.classList.contains('player')) {
-            if (playerFormContainer) {
-                // フォームを選手の右側に表示
-                playerFormContainer.style.left = `${player.offsetLeft + player.offsetWidth}px`;
-                playerFormContainer.style.top = `${player.offsetTop}px`;
-                playerFormContainer.classList.add('active');
-            }
-        }
-    });
-
-    // チームIDを保持する変数
-    var selectedTeamId = null;
-
-    // チームを選択した際にチームIDを保持する関数
-    function selectTeam(teamId) {
-        selectedTeamId = teamId;
     }
 
     // 相手チームを保存する関数
@@ -347,51 +331,25 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // 選手情報更新ボタンのクリックイベント
-    document.getElementById('update-player').addEventListener('click', () => {
-        playerFormContainer.classList.remove('active'); // フォームを非表示にする
-    });
-
-    // 入力フォームを閉じるボタンのクリックイベント
-    document.getElementById('close-form').addEventListener('click', () => {
-        playerFormContainer.classList.remove('active'); // フォームを非表示にする
-    });
-
     // フォーメーション選択ボックスの変更時に選手配置を更新する
     function handleFormationSelect() {
-        team1Container.innerHTML = ''; // 選手をクリア
-        team2Container.innerHTML = ''; // 選手をクリア
+        team1Container.innerHTML = ''; // チーム1の選手をクリア
+        team2Container.innerHTML = ''; // チーム2の選手をクリア
 
         const team1Formation = document.getElementById('team1-formation').value;
         const team2Formation = document.getElementById('team2-formation').value;
 
-        generatePlayers(team1Container, team1Formation, true); // チーム1は左側
-        generatePlayers(team2Container, team2Formation, false); // チーム2は右側
+        generatePlayers(team1Container, team1Formation, true, 'team1'); // チーム1は左側
+        generatePlayers(team2Container, team2Formation, false, 'team2'); // チーム2は右側
     }
 
-    // フォーメーション選択ボックスの変更時に選手配置を更新する
+    // フォーメーション選択ボックスの変更イベントに関数を紐づける
     document.getElementById('team1-formation').addEventListener('change', handleFormationSelect);
     document.getElementById('team2-formation').addEventListener('change', handleFormationSelect);
 
-    // 初期配置を生成
+    // 初期表示時に選手配置を生成する
     handleFormationSelect();
 });
-
-// チーム名を選択ボックスから取得して表示する関数
-function displaySelectedTeamName() {
-    const teamSelectRight = document.getElementById('teamSelectRight');
-    const team2NameElement = document.getElementById('team2-name');
-    if (teamSelectRight && team2NameElement) {
-        const selectedTeamName = teamSelectRight.options[teamSelectRight.selectedIndex].text;
-        team2NameElement.textContent = selectedTeamName;
-    }
-}
-
-// 選択ボックスの変更時にチーム名を表示更新する
-document.getElementById('teamSelectRight').addEventListener('change', displaySelectedTeamName);
-
-// 初期表示も行う
-displaySelectedTeamName();
 
 </script>
 <footer>
