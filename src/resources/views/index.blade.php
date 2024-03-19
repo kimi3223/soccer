@@ -179,13 +179,19 @@
     </nav>
 </header>
 
-<!-- チーム2の選択ボックス -->
 <div class="box">
-    <label for="teamSelectRight">相手チーム:</label>
+<select id="teamSelectLeft">
+    @foreach($teams as $team)
+        @if($team->name === 'バサラ')
+            <option value="{{ $team->id }}" selected>{{ $team->name }}</option>
+        @else
+            <option value="{{ $team->id }}">{{ $team->name }}</option>
+        @endif
+    @endforeach
+</select>
+<!-- チーム2の選択ボックス -->
+    <label for="teamSelectRight">VS</label>
     <select id="teamSelectRight"></select>
-    <button onclick="saveOpponentTeam()">相手チームを保存する</button><br>
-    <label for="match-date">試合日時：</label>
-    <input type="datetime-local" id="match-date" name="match-date"><br>
     <div>
         <label for="team-goals">バサラ</label>
         <span id="team1-goals">0</span>
@@ -403,6 +409,82 @@ document.getElementById('teamSelectRight').addEventListener('change', displaySel
 displaySelectedTeamName();
 
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 他の部分はそのまま残して修正部分を追加しています
+
+    // 一括保存ボタンのクリックイベント
+    document.getElementById('save-all-players').addEventListener('click', () => {
+        // 相手チームIDを取得
+        const opponentTeamId = document.getElementById('teamSelectRight').value;
+        // チーム1とチーム2のフォーメーションを取得
+        const team1Formation = document.getElementById('team1-formation').value;
+        const team2Formation = document.getElementById('team2-formation').value;
+
+        // チーム1の選手情報を取得
+        const team1Players = [];
+        document.querySelectorAll('.team1 .player').forEach(player => {
+            const playerId = player.id.split('-')[1];
+            const playerNumber = parseInt(player.textContent.replace('#', ''));
+            // 他の選手情報も同様に取得して配列に追加する
+            team1Players.push({
+                playerId: playerId,
+                playerNumber: playerNumber,
+                // 他の選手情報も追加
+            });
+        });
+
+        // チーム2の選手情報を取得
+        const team2Players = [];
+        document.querySelectorAll('.team2 .player').forEach(player => {
+            const playerId = player.id.split('-')[1];
+            const playerNumber = parseInt(player.textContent.replace('#', ''));
+            // 他の選手情報も同様に取得して配列に追加する
+            team2Players.push({
+                playerId: playerId,
+                playerNumber: playerNumber,
+                // 他の選手情報も追加
+            });
+        });
+
+        // データをサーバーに送信
+        saveMatchData(opponentTeamId, team1Formation, team2Formation, team1Players, team2Players);
+    });
+
+    // 選手データをサーバーに送信する関数
+    function saveMatchData(opponentTeamId, team1Formation, team2Formation, team1Players, team2Players) {
+        fetch('/save-match-data', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({
+                opponentTeamId: opponentTeamId,
+                team1Formation: team1Formation,
+                team2Formation: team2Formation,
+                team1Players: team1Players,
+                team2Players: team2Players
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Match data saved:', data);
+            // 保存成功時の処理を記述
+        })
+        .catch(error => {
+            console.error('Error saving match data:', error);
+            // エラー時の処理を記述
+        });
+    }
+});
+</script>
+
 <footer>
     <p>&copy; 2024 Soccer App</p>
 </footer>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Match;
 use App\Models\Player;
+use App\Models\Formation;
 use Illuminate\Support\Facades\DB;
 
 class MatchController extends Controller
@@ -67,47 +68,52 @@ class MatchController extends Controller
         return view('third');
     }
 
-    public function saveAllData(Request $request)
-{
-    // フォームから送信されたデータを取得
-    $team1Formation = $request->input('team1Formation');
-    $team2Formation = $request->input('team2Formation');
-    $team1Players = $request->input('team1Players');
-    $team2Players = $request->input('team2Players');
+    public function saveMatchData(Request $request)
+    {
+        // リクエストから必要なデータを取得
+        $opponentTeamId = $request->input('opponentTeamId');
+        $team1Formation = $request->input('team1Formation');
+        $team2Formation = $request->input('team2Formation');
+        $team1Players = $request->input('team1Players');
+        $team2Players = $request->input('team2Players');
 
-    // マッチの試合情報を保存
-    $match = new Match();
-    $match->team1_id = $request->input('team1_id');
-    $match->team2_id = $request->input('team2_id');
-    $match->team1_formation = $team1Formation;
-    $match->team2_formation = $team2Formation;
-    // その他の試合データを必要に応じて保存
-    $match->save();
+        // matchesテーブルにデータを保存
+        $match = new Match();
+        $match->date = $matchDate;
+        $match->opponent_team = $opponentTeamId;
+        $match->team1_formation = $team1Formation;
+        $match->team2_formation = $team2Formation;
+        // 他の情報も適切に保存
+        $match->save();
 
-    // チーム１の選手情報を保存
-    foreach ($team1Players as $playerData) {
-        Player::create([
-            'team_id' => $request->input('team1_id'),
-            'player_number' => $playerData['playerNumber'],
-            'foot' => $playerData['foot'],
-            'goals' => $playerData['goals'],
-            'feature' => $playerData['feature']
-        ]);
+        // playersテーブルにデータを保存
+        // チーム1の選手情報を保存
+        foreach ($team1Players as $playerData) {
+            $player = new Player();
+            $player->match_id = $match->id;
+            $player->team_id = $team1Id; // チーム1のIDを適切に設定する
+            $player->player_number = $playerData['player_number'];
+            $player->foot = $playerData['foot']; // 選手情報から利き足を取得
+            $player->goals = $playerData['goals']; // 選手情報からゴール数を取得
+            $player->feature = $playerData['feature']; // 選手情報から特徴を取得
+            // 他の選手情報も適切に保存する
+            $player->save();
+        }
+
+        // チーム2の選手情報を保存
+        foreach ($team2Players as $playerData) {
+            $player = new Player();
+            $player->match_id = $match->id;
+            $player->team_id = $team2Id; // チーム2のIDを適切に設定する
+            $player->player_number = $playerData['player_number'];
+            $player->foot = $playerData['foot']; // 選手情報から利き足を取得
+            $player->goals = $playerData['goals']; // 選手情報からゴール数を取得
+            $player->feature = $playerData['feature']; // 選手情報から特徴を取得
+            // 他の選手情報も適切に保存する
+            $player->save();
+        }
+
+        // 必要に応じてレスポンスを返す
+        return response()->json(['message' => 'Match data saved successfully']);
     }
-
-    // チーム２の選手情報を保存
-    foreach ($team2Players as $playerData) {
-        Player::create([
-            'team_id' => $request->input('team2_id'),
-            'player_number' => $playerData['playerNumber'],
-            'foot' => $playerData['foot'],
-            'goals' => $playerData['goals'],
-            'feature' => $playerData['feature']
-        ]);
-    }
-
-    // 成功した場合は適切なレスポンスを返す
-    return Redirect::to('/')->with('success', 'Data saved successfully');
-}
-
 }
