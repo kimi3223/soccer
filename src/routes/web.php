@@ -46,4 +46,8 @@ Route::get('/teams/{team}/formation', [TeamController::class, 'createFormation']
 Route::post('/teams/{team}/formation', [TeamController::class, 'storeFormation'])->name('teams.storeFormation');
 
 Route::get('/', [TeamController::class, 'index'])->name('index');
-Route::post('/save-match-data', [MatchController::class, 'saveMatchData']);
+// フォームの送信先であるsave-player-infoルートを定義
+Route::post('/save-player-data', [MatchController::class, 'savePlayerData']);
+Route::post('/save-match-data', [MatchController::class, 'store']);
+Route::post('/save-player-data', [PlayerController::class, 'store']);
+

@@ -214,7 +214,7 @@
         <option value="3-2-2">3-2-2</option>
         <option value="2-3-2">2-3-2</option>
     </select>
-    <button id="save-all-players">一括保存</button>
+    <button id="save-match-data">保存</button>
 </div>
 
 <div class="field">
@@ -230,29 +230,41 @@
 </div>
 
 <!-- 選手情報入力フォーム -->
-<div class="player-form-container" id="player-form-container" >
-    <div id="player-form" class="player-form">
-        <label for="player-number">背番号：</label>
-        <input type="number" id="player-number" name="player-number" min="1" max="99"><br>
-        <label for="player-foot">利き足：</label>
-        <select id="player-foot" name="player-foot">
-            <option value="右足">右足</option>
-            <option value="左足">左足</option>
-            <option value="両足">両足</option>
-        </select><br>
-        <label for="player-feature">特徴：</label>
-        <select id="player-feature">
-            <option value="dribble">ドリブル</option>
-            <option value="long-pass">ロングパス</option>
-            <option value="physical">フィジカル</option>
-            <option value="both-feet">両脚</option>
-        </select><br>
-        <label for="player-goals">ゴール数：</label>
-        <input type="number" id="player-goals" name="player-goals" min="0" max="20"><br>
-        <button id="update-player">選手情報更新</button>
-        <button id="close-form">閉じる</button>
+<form action="/save-player-data" method="POST">
+    @csrf
+    <div class="player-form-container" id="player-form-container">
+        <div id="player-form" class="player-form">
+            <select id="teamSelect" name="team_id">
+                @foreach($teams as $team)
+                    <option value="{{ $team->id }}">{{ $team->name }}</option>
+                @endforeach
+            </select><br>
+            <label for="player-number">背番号：</label>
+            <input type="number" id="player-number" name="player_number" min="1" max="99" required><br>
+            <!-- 利き足のセレクトボックスのname属性が抜けていたので追加 -->
+            <label for="player-foot">利き足：</label>
+            <select id="player-foot" name="player_foot">
+                <option value="右足">右足</option>
+                <option value="左足">左足</option>
+                <option value="両足">両足</option>
+            </select><br>
+            <!-- 特徴のセレクトボックスのname属性が抜けていたので追加 -->
+            <label for="player-feature">特徴：</label>
+            <select id="player-feature" name="player_feature">
+                <option value="dribble">ドリブル</option>
+                <option value="long-pass">ロングパス</option>
+                <option value="physical">フィジカル</option>
+                <option value="both-feet">両脚</option>
+            </select><br>
+            <!-- ゴール数の入力欄のname属性が抜けていたので追加 -->
+            <label for="player-goals">ゴール数：</label>
+            <input type="number" id="player-goals" name="player_goals" min="0" max="20" required><br>
+            <!-- 閉じるボタンのid属性が抜けていたので追加 -->
+            <button id="save-player-data">選手データを保存</button>
+            <button id="close-form" type="button">閉じる</button>
+        </div>
     </div>
-</div>
+</form>
 
 @isset($teams)
 <script>
@@ -275,9 +287,23 @@ document.addEventListener('DOMContentLoaded', function() {
     const team1Container = document.getElementById('team1-container');
     const team2Container = document.getElementById('team2-container');
     const playerFormContainer = document.getElementById('player-form-container');
+    const savePlayerDataBtn = document.getElementById('save-player-data');
     const playerForm = document.getElementById('player-form');
-    const teamSelectRight = document.getElementById('teamSelectRight');
-    const team2NameSpan = document.getElementById('team2-name');
+    const teamSelect = document.getElementById('teamSelect');
+    const saveMatchDataBtn = document.getElementById('save-match-data');
+
+    if (saveMatchDataBtn) {
+        saveMatchDataBtn.addEventListener('click', () => {
+            const opponentTeamId = document.getElementById('teamSelectRight').value;
+            const matchDate = new Date().toISOString(); // 現在の日時を取得（仮定）
+            const team1Formation = document.getElementById('team1-formation').value;
+            const team2Formation = document.getElementById('team2-formation').value;
+
+            saveMatchData(opponentTeamId, matchDate, team1Formation, team2Formation);
+        });
+    } else {
+        console.error('save-match-data ボタンが見つかりません。');
+    }
 
     // generatePlayers関数を定義
     function generatePlayers(container, formation, isLeftSide, teamClass) {
@@ -315,20 +341,26 @@ document.addEventListener('DOMContentLoaded', function() {
                         // フォームに選手情報を表示する処理を追加することもできます
                         // 選手のIDやその他情報をフォームに表示するロジックを記述します
                     }
+                    // フォームが送信されたときのイベントリスナーを追加
+                    playerForm.addEventListener('submit', function(event) {
+                        event.preventDefault(); // フォームのデフォルト動作を停止
+
+                        const selectedTeamId = teamSelect.value;
+                        console.log('Selected Team ID:', selectedTeamId);
+                        // ここで選手データをサーバーに送信する処理を記述する
+                       // fetchやAjaxを使用してデータを送信することができます
+                    });
                 });
             }
         }
     }
 
-    // チームIDを保持する変数
     let selectedTeamId = null;
 
-    // チームを選択した際にチームIDを保持する関数
     function selectTeam(teamId) {
         selectedTeamId = teamId;
     }
 
-    // チーム名を選択ボックスに追加する関数
     function addTeamOption(teamId, teamName) {
         const option = document.createElement('option');
         option.value = teamId;
@@ -336,123 +368,38 @@ document.addEventListener('DOMContentLoaded', function() {
         teamSelectRight.appendChild(option);
     }
 
-    // 入力フォームを閉じるボタンのクリックイベント
     document.getElementById('close-form').addEventListener('click', () => {
-        playerFormContainer.classList.remove('active'); // フォームを非表示にする
+        playerFormContainer.classList.remove('active');
     });
 
-    // 相手チームを保存する関数
-    function saveOpponentTeam() {
-        // 選択された相手チームのIDを取得
-        const opponentTeamId = document.getElementById('teamSelectRight').value;
-
-        // サーバーにデータを送信して保存する処理
-        fetch('/save-match-opponent', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({
-                opponentTeamId: opponentTeamId
-            })
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('Match opponent saved:', data);
-        })
-        .catch(error => {
-            console.error('Error saving match opponent:', error);
-            // エラーが発生した場合の処理を記述
-        });
-    }
-
-    // フォーメーション選択ボックスの変更時に選手配置を更新する
     function handleFormationSelect() {
-        team1Container.innerHTML = ''; // チーム1の選手をクリア
-        team2Container.innerHTML = ''; // チーム2の選手をクリア
+        team1Container.innerHTML = '';
+        team2Container.innerHTML = '';
 
         const team1Formation = document.getElementById('team1-formation').value;
         const team2Formation = document.getElementById('team2-formation').value;
 
-        generatePlayers(team1Container, team1Formation, true, 'team1'); // チーム1は左側
-        generatePlayers(team2Container, team2Formation, false, 'team2'); // チーム2は右側
+        generatePlayers(team1Container, team1Formation, true, 'team1');
+        generatePlayers(team2Container, team2Formation, false, 'team2');
     }
 
-    // フォーメーション選択ボックスの変更イベントに関数を紐づける
     document.getElementById('team1-formation').addEventListener('change', handleFormationSelect);
     document.getElementById('team2-formation').addEventListener('change', handleFormationSelect);
 
-    // 初期表示時に選手配置を生成する
     handleFormationSelect();
-});
 
-// チーム名を選択ボックスから取得して表示する関数
-function displaySelectedTeamName() {
-    const teamSelectRight = document.getElementById('teamSelectRight');
-    const team2NameElement = document.getElementById('team2-name');
-    if (teamSelectRight && team2NameElement) {
-        const selectedTeamName = teamSelectRight.options[teamSelectRight.selectedIndex].text;
-        team2NameElement.textContent = selectedTeamName;
-    }
-}
-
-// 選択ボックスの変更時にチーム名を表示更新する
-document.getElementById('teamSelectRight').addEventListener('change', displaySelectedTeamName);
-
-// 初期表示も行う
-displaySelectedTeamName();
-
-</script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // 他の部分はそのまま残して修正部分を追加しています
-
-    // 一括保存ボタンのクリックイベント
-    document.getElementById('save-all-players').addEventListener('click', () => {
-        // 相手チームIDを取得
+    document.getElementById('save-match-data').addEventListener('click', () => {
         const opponentTeamId = document.getElementById('teamSelectRight').value;
-        // チーム1とチーム2のフォーメーションを取得
+        const matchDate = document.getElementById('match-date').value;
         const team1Formation = document.getElementById('team1-formation').value;
         const team2Formation = document.getElementById('team2-formation').value;
 
-        // チーム1の選手情報を取得
-        const team1Players = [];
-        document.querySelectorAll('.team1 .player').forEach(player => {
-            const playerId = player.id.split('-')[1];
-            const playerNumber = parseInt(player.textContent.replace('#', ''));
-            // 他の選手情報も同様に取得して配列に追加する
-            team1Players.push({
-                playerId: playerId,
-                playerNumber: playerNumber,
-                // 他の選手情報も追加
-            });
-        });
-
-        // チーム2の選手情報を取得
-        const team2Players = [];
-        document.querySelectorAll('.team2 .player').forEach(player => {
-            const playerId = player.id.split('-')[1];
-            const playerNumber = parseInt(player.textContent.replace('#', ''));
-            // 他の選手情報も同様に取得して配列に追加する
-            team2Players.push({
-                playerId: playerId,
-                playerNumber: playerNumber,
-                // 他の選手情報も追加
-            });
-        });
-
-        // データをサーバーに送信
-        saveMatchData(opponentTeamId, team1Formation, team2Formation, team1Players, team2Players);
+        // マッチデータを保存する関数を呼び出す
+        saveMatchData(opponentTeamId, matchDate, team1Formation, team2Formation);
     });
 
-    // 選手データをサーバーに送信する関数
-    function saveMatchData(opponentTeamId, team1Formation, team2Formation, team1Players, team2Players) {
+    function saveMatchData(opponentTeamId, matchDate, team1Formation, team2Formation) {
+        // マッチデータをサーバーに送信して保存
         fetch('/save-match-data', {
             method: 'POST',
             headers: {
@@ -460,11 +407,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             },
             body: JSON.stringify({
-                opponentTeamId: opponentTeamId,
-                team1Formation: team1Formation,
-                team2Formation: team2Formation,
-                team1Players: team1Players,
-                team2Players: team2Players
+                opponent_team: opponentTeamId,
+                date: matchDate,
+                team1_formation: team1Formation,
+                team2_formation: team2Formation
             })
         })
         .then(response => {
@@ -475,16 +421,46 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(data => {
             console.log('Match data saved:', data);
-            // 保存成功時の処理を記述
+            // マッチデータが保存された後の処理を記述（任意）
         })
         .catch(error => {
             console.error('Error saving match data:', error);
-            // エラー時の処理を記述
+        });
+    }
+
+    // savePlayerData関数を定義
+    function savePlayerData(teamId, playerNumber, playerFoot, playerFeature, playerGoals) {
+        // プレイヤーデータをサーバーに送信して保存
+        fetch('/save-player-data', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({
+                team_id: teamId,
+                player_number: playerNumber,
+                foot: playerFoot,
+                feature: playerFeature,
+                goals: playerGoals
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Player data saved:', data);
+            // プレイヤーデータが保存された後の処理を記述（任意）
+        })
+        .catch(error => {
+            console.error('Error saving player data:', error);
         });
     }
 });
 </script>
-
 <footer>
     <p>&copy; 2024 Soccer App</p>
 </footer>
